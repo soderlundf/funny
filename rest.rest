@@ -1,5 +1,0 @@
-### GET
-GET http://localhost:3000
-
-### Metrics
-GET http://localhost:3000/metrics
