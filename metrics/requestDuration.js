@@ -8,10 +8,12 @@ const excludes = ['/metrics'];
 
 // Create a new Histogram metric to record the duration of requests.
 const httpRequestDurationMicroseconds = new prometheusClient.Histogram({
-    name: 'http_request_duration_ms',
-    help: 'Duration of HTTP requests in ms',
+    name: 'http_request_duration_microseconds',
+    help: 'Duration of HTTP requests in microseconds',
     labelNames: ['method', 'route', 'code'],
-    buckets: [50, 100, 200, 300, 400, 500, 1000] // You can adjust these buckets as needed
+    buckets: [50000, 100000, 200000, 300000, 400000, 500000, 1000000],
+    unit: 'microseconds',
+    type: 'histogram'
 });
 
 module.exports = (req, res, next) => {
@@ -21,14 +23,15 @@ module.exports = (req, res, next) => {
     }
 
     // Increment the counter for the request
-    const start = Date.now();
+    const start = process.hrtime();
     res.on("finish", () => {
-        const duration = Date.now() - start;
+        const diff = process.hrtime(start);
+        const duration = diff[0] * 1e6 + diff[1] / 1e3; // convert to microseconds
         httpRequestDurationMicroseconds
             .labels(req.method, req.route ? req.route.path : req.path, res.statusCode)
             .observe(duration);
 
-        console.log(`Request to ${req.path} took ${duration}ms`);
+        console.log(`Request to ${req.path} took ${duration}µs`);
     });
     next();
 };
