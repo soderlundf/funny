@@ -5,6 +5,8 @@
 // Import the prom-client module
 const prometheusClient = require('prom-client');
 
+const excludes = ['/metrics'];
+
 // Create a new Counter metric to count the number of requests
 const numOfRequests = new prometheusClient.Counter({
     name: 'num_of_requests',
@@ -14,6 +16,11 @@ const numOfRequests = new prometheusClient.Counter({
 
 // Export the middleware function
 module.exports = (req, res, next) => {
+    // Exclude certain paths from the count.
+    if (excludes.includes(req.path)) {
+        return next();
+    }
+
     // Increment the counter for the request
     numOfRequests
         .labels(req.method, req.route ? req.route.path : req.path, res.statusCode)
